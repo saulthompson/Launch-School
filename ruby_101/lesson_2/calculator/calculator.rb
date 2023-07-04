@@ -126,7 +126,8 @@ def calculate(num1, num2, operator)
 end
 
 def division_calculator(num1, num2)
-  return format_decimal_places!(num1.to_f() / num2) if num2.to_f != 0
+  puts num1.class, num2.class
+  return format_decimal_places!(num1.to_f() / num2.to_f()) if num2.to_f() != 0
 
   'zero_div'
 end
