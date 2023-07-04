@@ -112,24 +112,25 @@ def get_operator
   end
 end
 
-def calculate(num1, num2, operator)
-  case operator
+def calculate(number_one, number_two, op)
+  case op
   when '/'
-    division_calculator(num1, num2)
+    division_calculator(number_one, number_two)
   when '*'
-    format_decimal_places!(num1.to_f * num2.to_f)
+    format_decimal_places!(number_one.to_f * number_two.to_f)
   when '+'
-    format_decimal_places!(num1.to_f + num2.to_f)
+    format_decimal_places!(number_one.to_f + number_two.to_f)
   when '-'
-    format_decimal_places!(num1.to_f - num2.to_f)
+    format_decimal_places!(number_one.to_f - number_two.to_f)
   end
 end
 
-def division_calculator(num1, num2)
-  puts num1.class, num2.class
-  return format_decimal_places!(num1.to_f() / num2.to_f()) if num2.to_f() != 0
-
-  'zero_div'
+def division_calculator(number_one, number_two)
+  if number_two.to_f() != 0
+    return format_decimal_places!(number_one.to_f() / number_two.to_f())
+  else
+    'zero_div'
+  end
 end
 
 def format_decimal_places!(num)
