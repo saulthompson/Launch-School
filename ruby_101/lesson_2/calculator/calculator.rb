@@ -126,10 +126,10 @@ def calculate(num1, num2, op)
 end
 
 def division_calculator(num1, num2)
-  if num2.to_f() != 0
-    return format_decimal_places!(num1.to_f() / num2.to_f())
-  else
+  if num2.to_i() == 0
     'zero_div'
+  else
+    format_decimal_places!(num1.to_f() / num2.to_f())
   end
 end
 
@@ -140,7 +140,45 @@ end
 def continue?
   prompt('continue?')
   user_choice = Kernel.gets.chomp
-  user_choice.start_with?('y') ? true : false
+  user_choice.start_with?('y')
+end
+
+def calculator_loop(user_name)
+  loop do
+    num1 = get_num
+    display(num1)
+    operator = get_operator
+    display("#{num1} #{operator} ...")
+    num2 = get_num
+
+    calculation = calculate(num1, num2, operator)
+
+    if calculation == 'zero_div'
+      prompt('zero_div', name: user_name)
+      next
+    else
+      display_result(calculation, num1, operator, num2)
+    end
+
+    if continue?
+      system('clear')
+    else
+      system('clear')
+      break
+    end
+  end
+end
+
+def display_result(calculation, num1, operator, num2)
+  display('Calculating...')
+    Kernel.sleep(0.8)
+    system('clear')
+    prompt('result', {
+             res: calculation,
+             num1: num1,
+             op: operator,
+             num2: num2
+           })
 end
 
 # main code
@@ -153,32 +191,6 @@ user_name = get_user_name
 prompt('user_name', name: user_name)
 
 # main calculator loop
-loop do
-  num1 = get_num
-  display(num1)
-  operator = get_operator
-  display("#{num1} #{operator} ...")
-  num2 = get_num
+calculator_loop(user_name)
 
-  calculation = calculate(num1, num2, operator)
-
-  if calculation == 'zero_div'
-    prompt('zero_div', name: user_name)
-    next
-  else
-    display('Calculating...')
-    Kernel.sleep(0.8)
-    system('clear')
-    prompt('result', {
-             res: calculation,
-             num1: num1,
-             op: operator,
-             num2: num2
-           })
-  end
-  next if continue?
-
-  prompt('goodbye', name: user_name)
-
-  break
-end
+prompt('goodbye', name: user_name)
