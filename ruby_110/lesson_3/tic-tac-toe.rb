@@ -135,7 +135,7 @@ end
 def winning_square(brd)
   WINNING_LINES.each do |line|
     values = brd.values_at(*line)
-    other = values.partition {|el| el == PLAYER_MARKER}[0]
+    other = values.partition {|el| el == PLAYER_MARKER}[1]
     if other.size == 3 && other.partition {|el| el == COMPUTER_MARKER}[0].size == 2
       square = line[values.index(" ")]
       return square
@@ -173,6 +173,18 @@ def detect_winner(brd)
   nil
 end
 
+def place_piece!(board, current_player)
+  if current_player == "Computer"
+    computer_places_piece!(board)
+  else
+    player_places_piece!(board)
+  end
+end
+
+def alternate_player(current_player)
+  current_player == "Player" ? "Computer" : "Player"
+end
+
 
 loop do
   board = initialize_board
@@ -185,30 +197,22 @@ loop do
       answer = [true, false].sample
     else
       prompt("Should the player take the first turn? (y/n)")
-      (answer = false) unless gets.chomp.downcase.start_with?("y")
+      if gets.chomp.downcase.start_with?("y")
+        answer = true
+      end
     end
-    
+    current_player = (answer ? "Player" : "Computer")
+
     loop do
     
       display_board(board, player_score, computer_score)
     
-      if answer
-        player_places_piece!(board)
+        place_piece!(board, current_player)
+        current_player = alternate_player(current_player)
         break if someone_won?(board) || board_full?(board)
       end
       
-      computer_places_piece!(board)
-      display_board(board, player_score, computer_score)
-      break if someone_won?(board) || board_full?(board)
-
-      if not answer
-        player_places_piece!(board)
-        break if someone_won?(board) || board_full?(board)
-      end
-        
-      display_board(board, player_score, computer_score)
-      break if someone_won?(board) || board_full?(board)
-    end
+    display_board(board, player_score, computer_score)
 
     if someone_won?(board)
       prompt "#{detect_winner(board)} won!"
@@ -252,11 +256,12 @@ implicit rules:
   
   
 examples:
-  
+.............................................................
   
   
 
-initialize `score` in `initialize_board`
+
+problem: let the user decide if the computer chooses who's turn is first
 
 prompt let the computer choose who goes first?
 get user answer
