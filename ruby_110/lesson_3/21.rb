@@ -46,7 +46,96 @@ Algorithm:
 6. If dealer bust, player wins.
 7. Compare cards and declare winner.
 
+
+Subprocesses:
+
+  1. CARDS = {
+    hearts => {1 => 1 ... k => 10, a => 1}
+    diamonds =>
+    spades =>
+    clubs =>
+  }
+    initialize deck, a randomized array formed from CARDS
+    
+    
+  2.  
+      draw(deck) method
+        deck.delete(deck.sample)
+      end
+      
+      deal(deck) method
+        first = draw(deck)
+        second = draw(deck)
+        hand = {first => CARDS[spades][first], second =>...}
+        hand = first.merge(second)
+        if hand.key?(ace)
+          hand[ace] = ace_value(hand)
+        return hand
+      
+      player_hand, dealer_hand = deal(deck), deal(deck)
+      
+  3. player turn
+      display player_hand and one, random card from dealer_hand
+      prompt hit or stay
+        if hit
+          hand = hit(deck, hand)
+          return player_lost if bust?(hand)
+          display new hand
+        - repeat until bust? or "stay"
+          
+        if player bust, return dealer wins
+  
+  4. dealer turn
+      
+      unless value of dealer_hand >= 17
+        dealer chooses hit
+          dealer_hand.merge(deal(deck))
+          determine value of aces, if any present
+          - repeat
+        else dealer stays
+        if dealer busts, return player wins, else..
+          
+  5. compare cards
+        get value of each hand
+          value = hand.values.sum
+        whichever is closest to 21 wins
+          if (21 - player_value) <= (21 - dealer_value)
+            player wins
+          else
+            dealer wins
+          end
+  
+  6. display result
+  
+  
+  Methods:
+  
+    def ace_value(hand)
+      ace = 11 if 11 + (each value in hand) <= 21
+    else ace = 1
+    end
+    
+    def hit(deck, hand)
+      hand = hand.merge(draw(deck))
+    end
+    
+  
+    
+    def display_hands(player_hand, dealer_hand)
+      player_value = player_hand.map {|key, val| "#{val}" }
+      ... 
+      dealer_value = dealer_hand.map... .sample
+      puts "Dealer has => #{dealer_value} and an unknown card"
+      puts "You have => player_value.join(' and ')"
+    end
+    
+    def bust?(hand)
+      hand.values.sum > 21 ? bust  => not bust
+    end
+    
+  
 =end
+
 require 'pry'
 require 'pry-byebug'
 
@@ -121,10 +210,8 @@ end
 def deal(deck)
   first, second = draw(deck), draw(deck)
   hand = {first => CARDS[:spades][first], second => CARDS[:spades][second]}
-  if hand.key?(:A)
-    hand[:A] = ace_value(hand)
-  end
-  return hand
+  hand.key?(:A) && hand[:A] = ace_value(hand)
+  hand
 end
 
 def ace_value(hand)
@@ -149,6 +236,10 @@ end
 def dealer_turn(deck, dealer_hand)
   while dealer_hand.values.sum < 17
     dealer_hand = hit(deck, dealer_hand)
+    puts "Dealer hit!"
+    sleep(1.3)
+    puts "Dealer's cards are now #{dealer_hand.values.join(' and ')}"
+    sleep(1.3)
   end
   return "dealer lost" if dealer_hand.values.sum > 21
   dealer_hand.values.sum
@@ -166,9 +257,7 @@ end
 
 def hit(deck, player_hand)
   hand = player_hand.merge({a = draw(deck) => CARDS[:spades][a]})
-  if hand.key?(:A)
-    hand[:A] = ace_value(hand)
-  end
+  hand.key?(:A) && hand[:A] = ace_value(hand)
   hand
 end
 
@@ -177,7 +266,7 @@ def bust?(hand)
 end
 
 def compare_results(player_hand, dealer_hand)
-  player_hand > dealer_hand ? "player" : "dealer"
+  player_hand >= dealer_hand ? "player" : "dealer"
 end
 
 def play_again?
@@ -197,119 +286,28 @@ loop do
   
   if player_hand == "player lost"
     puts "Busted. You lost!"
-    next if play_again?
-    break
+    sleep(1.3)
+    play_again? ? next : break
+
   end
   
   dealer_hand = dealer_turn(deck, dealer_hand)
   
   if dealer_hand == "dealer lost"
     puts "The dealer busted. You win!"
-    next if play_again?
-    break
+    play_again? ? next : break
   end
   
   if compare_results(player_hand, dealer_hand) == "player"
     puts "You got #{player_hand}. The dealer got #{dealer_hand}. You win!"
+    sleep(1.3)
     next if play_again?
     break
   else
     puts "The dealer got #{dealer_hand}. You got #{player_hand}. Dealer wins!"
-    next if play_again?
-    break
+    sleep(1.3)
+    play_again? ? next : break
   end
 end
 
 puts "Thanks for playing 21!"
-
-
-
-=begin
-
-subprocesses =>
-  1. CARDS = {
-    hearts => {1 => 1 ... k => 10, a => 1}
-    diamonds =>
-    spades =>
-    clubs =>
-  }
-    initialize deck, a randomized array formed from CARDS
-    
-    
-  2.  
-      draw(deck) method
-        deck.delete(deck.sample)
-      end
-      
-      deal(deck) method
-        first = draw(deck)
-        second = draw(deck)
-        hand = {first => CARDS[spades][first], second =>...}
-        hand = first.merge(second)
-        if hand.key?(ace)
-          hand[ace] = ace_value(hand)
-        return hand
-      
-      player_hand, dealer_hand = deal(deck), deal(deck)
-      
-  3. player turn
-      display player_hand and one, random card from dealer_hand
-      prompt hit or stay
-        if hit
-          hand = hit(deck, hand)
-          return player_lost if bust?(hand)
-          display new hand
-        - repeat until bust? or "stay"
-          
-        if player bust, return dealer wins
-  
-  4. dealer turn
-      
-      unless value of dealer_hand >= 17
-        dealer chooses hit
-          dealer_hand.merge(deal(deck))
-          determine value of aces, if any present
-          - repeat
-        else dealer stays
-        if dealer busts, return player wins, else..
-          
-  5. compare cards
-        get value of each hand
-          value = hand.values.sum
-        whichever is closest to 21 wins
-          if (21 - player_value) <= (21 - dealer_value)
-            player wins
-          else
-            dealer wins
-          end
-  
-  6. display result
-  
-  
-  
-  
-  def ace_value(hand)
-    ace = 11 if 11 + (each value in hand) <= 21
-  else ace = 1
-  end
-  
-  def hit(deck, hand)
-    hand = hand.merge(draw(deck))
-  end
-  
-
-  
-  def display_hands(player_hand, dealer_hand)
-    player_value = player_hand.map {|key, val| "#{val}" }
-    ... 
-    dealer_value = dealer_hand.map... .sample
-    puts "Dealer has => #{dealer_value} and an unknown card"
-    puts "You have => player_value.join(' and ')"
-  end
-  
-  def bust?(hand)
-    hand.values.sum > 21 ? bust  => not bust
-  end
-  
-  
-=end
