@@ -141,7 +141,7 @@ require 'pry-byebug'
 
 CARDS = {
   diamonds: {
-    :A => 0,
+    :Ace => 0,
     2 => 2,
     3 => 3,
     4 => 4,
@@ -151,12 +151,12 @@ CARDS = {
     8 => 8,
     9 => 9,
     10 => 10,
-    :J => 10,
-    :Q => 10,
-    :K => 10
+    :Jack => 10,
+    :Queen => 10,
+    :King => 10
   },
   hearts: {
-    :A => 0,
+    :Ace => 0,
     2 => 2,
     3 => 3,
     4 => 4,
@@ -166,12 +166,12 @@ CARDS = {
     8 => 8,
     9 => 9,
     10 => 10,
-    :J => 10,
-    :Q => 10,
-    :K => 10
+    :Jack => 10,
+    :Queen => 10,
+    :King => 10
   },
   spades: {
-    :A => 0,
+    :Ace => 0,
     2 => 2,
     3 => 3,
     4 => 4,
@@ -181,12 +181,12 @@ CARDS = {
     8 => 8,
     9 => 9,
     10 => 10,
-    :J => 10,
-    :Q => 10,
-    :K => 10
+    :Jack => 10,
+    :Queen => 10,
+    :King => 10
   },
   clubs: {
-    :A => 0,
+    :Ace => 0,
     2 => 2,
     3 => 3,
     4 => 4,
@@ -196,11 +196,15 @@ CARDS = {
     8 => 8,
     9 => 9,
     10 => 10,
-    :J => 10,
-    :Q => 10,
-    :K => 10
+    :Jack => 10,
+    :Queen => 10,
+    :King => 10
   }
-}.freeze
+}
+
+TARGET = 21
+
+#methods
 
 def draw(deck)
   deck.delete(deck.sample)
@@ -215,37 +219,39 @@ def deal(deck)
 end
 
 def ace_value(hand)
-  hand.values.sum <= 10 ? 11 : 1
+  hand.values.sum <= (TARGET - 11) ? 11 : 1
 end
 
-def player_turn(deck, player_hand, dealer_hand)
-  display_hands(player_hand, dealer_hand)
+def player_turn(deck, player_hand, dealer_hand, player_score, dealer_score)
+  display_hands(player_hand, dealer_hand, player_score, dealer_score)
   loop do
     puts 'Do you want to hit? (y/n)'
     break unless gets.chomp.downcase.start_with?('y')
 
     player_hand = hit(deck, player_hand)
-    display_hands(player_hand, dealer_hand)
+    display_hands(player_hand, dealer_hand, player_score, dealer_score)
     return 'player lost' if bust?(player_hand)
   end
   player_hand.values.sum
 end
 
 def dealer_turn(deck, dealer_hand)
-  while dealer_hand.values.sum < 17
+  puts "Dealer turn..."
+  while dealer_hand.values.sum < (TARGET - 4)
     dealer_hand = hit(deck, dealer_hand)
     puts 'Dealer hit!'
     sleep(1.3)
     puts "Dealer's cards are now #{dealer_hand.values.join(' and ')}"
     sleep(1.3)
   end
-  return 'dealer lost' if dealer_hand.values.sum > 21
+  return 'dealer lost' if dealer_hand.values.sum > TARGET
 
   dealer_hand.values.sum
 end
 
-def display_hands(player_hand, dealer_hand)
+def display_hands(player_hand, dealer_hand, player_score, dealer_score)
   system('clear')
+  puts "player #{player_score} : #{dealer_score} dealer"
   player_cards = player_hand.map { |key, _val| key }
   dealer_cards = dealer_hand.map { |key, _val| key }
 
@@ -255,59 +261,106 @@ end
 
 def hit(deck, player_hand)
   hand = player_hand.merge({ a = draw(deck) => CARDS[:spades][a] })
-  hand.key?(:A) && hand[:A] = ace_value(hand)
+  hand.key?(:Ace) && hand[:Ace] = ace_value(hand)
   hand
 end
 
 def bust?(hand)
-  hand.values.sum > 21
+  hand.values.sum > TARGET
 end
 
 def compare_results(player_hand, dealer_hand)
   player_hand >= dealer_hand ? 'player' : 'dealer'
 end
 
-def play_again?
+def play_again?(player_score, dealer_score, round_counter)
+  if round_counter == 5 || (player_score == 3 || dealer_score == 3)
+      end_game(player_score, dealer_score)
+      return false
+  end
   puts 'Would you like to play again? (y/n)'
   gets.chomp.downcase.start_with?('y')
 end
 
+def end_game(player_score, dealer_score)
+  puts "You played best of five against the dealer"
+  if player_score > dealer_score
+    puts "You won #{player_score} - #{dealer_score}!"
+  elsif player_score < dealer_score
+    puts "you lost #{player_score} - #{dealer_score}!"
+  end
+end
 # main program code
 
-loop do
-  system('clear')
-  deck = CARDS.values.map { |hsh| hsh.map { |key, _val| key } }.flatten.shuffle!
+#welcome messages
+system('clear')
+puts "How now, Jack Black?"
+sleep(1)
+system('clear')
+sleep(1)
+puts "Step right this way, #{TARGET} and under over here!"
+puts "Best of 5 rounds"
+sleep(1.5)
 
+
+player_score = 0
+dealer_score = 0
+round_counter = 0
+
+#main loop
+loop do
+  
+  round_counter += 1
+  if round_counter == 6
+    end_game(player_score, dealer_score)
+    break
+  end
+    
+  system('clear')
+  puts "player: #{player_score} : #{dealer_score} dealer"
+  
+  #initialize deck
+  deck = CARDS.values.map { |hsh| hsh.map { |key, _val| key } }.flatten.shuffle!
+  
+  #initial deal
   player_hand = deal(deck)
   dealer_hand = deal(deck)
 
-  player_hand = player_turn(deck, player_hand, dealer_hand)
+  #player turn
+  player_hand = player_turn(deck, player_hand, dealer_hand, player_score, dealer_score)
 
   if player_hand == 'player lost'
     puts 'Busted. You lost!'
+    dealer_score += 1
     sleep(1.3)
-    play_again? ? next : break
-
+    play_again?(player_score, dealer_score, round_counter) ? next : break
   end
-
+  
+  #dealer turn
   dealer_hand = dealer_turn(deck, dealer_hand)
 
   if dealer_hand == 'dealer lost'
+    player_score += 1
     puts 'The dealer busted. You win!'
-    play_again? ? next : break
+    play_again?(player_score, dealer_score, round_counter) ? next : break
   end
 
+  #player and dealer stay - now compare and display results
   if compare_results(player_hand, dealer_hand) == 'player'
     puts "You got #{player_hand}. The dealer got #{dealer_hand}. You win!"
+    player_score += 1
+    puts "player #{player_score} : #{dealer_score} dealer"
     sleep(1.3)
-    next if play_again?
-
-    break
+    play_again?(player_score, dealer_score, round_counter) ? next : break
   else
     puts "The dealer got #{dealer_hand}. You got #{player_hand}. Dealer wins!"
+    dealer_score += 1
     sleep(1.3)
-    play_again? ? next : break
   end
+  
+    #let player choose unless best of 5 has been completed
+    
+    play_again?(player_score, dealer_score, round_counter) ? next : break 
 end
 
-puts 'Thanks for playing 21!'
+puts "Thanks for playing #{TARGET}!"
