@@ -121,10 +121,7 @@ Algorithm--
       end
       
       word.chars.each_with_index do |char, idx2|
-        if char =~ /[A-Z]/
-          new_char= results[idx1].chars[idx2].upcase!
-          results[idx1][idx2] = new_char
-        end
+        results[idx1][idx2] = results[idx1][idx2].upcase! if char =~ /[A-Z]/
       end
     end
     
