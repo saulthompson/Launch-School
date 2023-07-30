@@ -110,8 +110,7 @@ Algorithm--
       repetition_count = word.count("eastEAST")
       results[idx1] *= (repetition_count / 4)
       
-      word.freeze
-      
+
       temp_word = word.dup
       
       loop do
