@@ -5,41 +5,13 @@ class Move
   @@move_number = 0
   @@tracker = {}
   VALUES = ['rock', 'paper', 'scissors', 'lizard', 'spock']
-  
-  # def initialize(value)
-  #   @value = value
-  # end
-  
-  # def <=>(other_move)
-  #   if value == 'rock'
-  #     return 1 if other_move == 'scissors' || other_move == 'lizard'
-  #     return -1 if other_move == 'paper' || other_move == 'spock'
-  #     return 0 if other_move == value
-  #   elsif value == 'paper'
-  #     return 1 if other_move == 'rock' || other_move == 'spock'
-  #     return -1 if other_move == 'scissors' || other_move == 'lizard'
-  #     return 0 if other_move == value
-  #   elsif value == 'scissors'
-  #     return 1 if other_move == 'paper' || other_move == 'lizard'
-  #     return -1 if other_move == 'rock' || other_move == 'spock'
-  #     return 0 if other_move == value
-  #   elsif value == 'lizard'
-  #     return 1 if other_move == 'paper' || other_move == 'spock'
-  #     return -1 if other_move == 'rock' || other_move == 'scissors'
-  #     return 0 if other_move == value
-  #   elsif value == 'spock'
-  #     return 1 if other_move == 'rock' || other_move == 'scissors'
-  #     return -1 if other_move == 'paper' || other_move == 'lizard'
-  #     return 0 if other_move == value
-  #   end
-  # end
-  
+
   def self.increment_move_number
     @@move_number += 1
   end
   
   def to_s
-    self.class.name.downcase
+    self.class.downcase
   end
   
   def self.track(player, move)
@@ -57,7 +29,7 @@ class Rock < Move
   def <=>(other_move)
     return 1 if other_move.to_s == 'scissors' || other_move.to_s == 'lizard'
     return -1 if other_move.to_s == 'paper' || other_move.to_s == 'spock'
-    return 0 if other_move.to_s == self.to_s
+    return 0 if other_move.to_s == to_s
   end
 end
 
@@ -66,7 +38,7 @@ class Paper < Move
   def <=>(other_move)
     return 1 if other_move.to_s == 'rock' || other_move.to_s == 'spock'
     return -1 if other_move.to_s == 'scissors' || other_move.to_s == 'lizard'
-    return 0 if other_move.to_s == self.to_s
+    return 0 if other_move.to_s == to_s
   end
 end
 
@@ -75,7 +47,7 @@ class Scissors < Move
   def <=>(other_move)
     return 1 if other_move.to_s == 'paper' || other_move.to_s == 'lizard'
     return -1 if other_move.to_s == 'rock' || other_move.to_s == 'spock'
-    return 0 if other_move.to_s == self.to_s
+    return 0 if other_move.to_s == to_s
   end
 end
 
@@ -84,7 +56,7 @@ class Lizard < Move
   def <=>(other_move)
     return 1 if other_move.to_s == 'spock' || other_move.to_s == 'paper'
     return -1 if other_move.to_s == 'rock' || other_move.to_s == 'scissors'
-    return 0 if other_move.to_s == self.to_s
+    return 0 if other_move.to_s == to_s
   end
 end
 
@@ -93,7 +65,7 @@ class Spock < Move
   def <=>(other_move)
     return 1 if other_move.to_s == 'rock' || other_move.to_s == 'scissors'
     return -1 if other_move.to_s == 'paper' || other_move.to_s == 'lizard'
-    return 0 if other_move.to_s == self.to_s
+    return 0 if other_move.to_s == to_s
   end
 end
 
@@ -152,7 +124,7 @@ end
 
 class R2D2 < Computer
   def set_name
-    @name = self.class.name
+    @name = self.class
   end
   
   def choose
@@ -167,7 +139,7 @@ end
 
 class C3P0 < Computer
   def set_name
-    @name = self.class.name
+    @name = self.class
   end
   
   def choose
@@ -182,7 +154,7 @@ end
 
 class Hal < Computer
   def set_name
-    @name = self.class.name
+    @name = self.class
   end
   
   def choose
@@ -197,7 +169,7 @@ end
 
 class Chappie < Computer
   def set_name
-    @name = self.class.name
+    @name = self.class
   end
   
   def choose
@@ -247,21 +219,6 @@ class RPSGame
     else
       puts "It's a tie!"
     end
-    
-    # case human.move
-    # when 'rock'
-    #   puts "It's a tie!" if computer.move == 'rock'
-    #   puts "#{human.name} won!" if computer.move == 'scissors'
-    #   puts "#{computer.name} won!" if computer.move == 'paper'
-    # when 'paper'
-    #   puts "It's a tie!" if computer.move == 'paper'
-    #   puts "#{human.name} won!" if computer.move == 'rock'
-    #   puts "#{computer.name} won!" if computer.move == 'scissors'
-    # when 'scissors'
-    #   puts "It's a tie!" if computer.move == 'scissors'
-    #   puts "#{human.name} won!" if computer.move == 'paper'
-    #   puts "#{computer.name} won!" if computer.move == 'rock'
-    # end
   end
   
   def update_score
