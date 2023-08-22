@@ -5,19 +5,29 @@ module Displayable
   def self.display_welcome_message
     puts "Welcome to Tic Tac Toe!"
     puts ""
+    puts "Get ready for your match - first to five wins!"
+    puts ""
   end
-  
+
   def display_goodbye_message
-    puts "Thanks for playing Tic Tac Toe, #{@human_name}! Goodbye!"
+    puts "Thanks for playing Tic Tac Toe, #{human.name}! Goodbye!"
+  end
+
+  def display_current_round
+    clear
+    puts "Round #{@round_counter}"
+    puts ""
   end
 
   def display_score
-    puts "The score is #{@human_name}: #{human.score} " \
-         "- #{@computer_name}: #{computer.score}"
+    display_current_round
+    puts "The score is #{human.name}: #{human.score} " \
+         "- #{computer.name}: #{computer.score}"
     puts ""
   end
 
   def display_board
+    display_current_round
     display_score
     puts ""
     board.draw
@@ -27,8 +37,8 @@ module Displayable
   def clear_screen_and_display_board
     clear
     if first_round?
-      puts "You're a #{@human_marker}. #{@computer_name} is a" +
-           @computer_marker
+      puts "You're a #{human.marker}. #{computer.name} is a" +
+           computer.marker
     end
     puts ""
     display_score
@@ -40,19 +50,21 @@ module Displayable
     puts "Let's play again!"
     puts ""
   end
-  
+
   def display_result
     clear_screen_and_display_board
+    sleep(2)
 
     case board.winning_marker
-    when @human_marker
+    when human.marker
       puts "You won! The final score was #{human.score}:#{computer.score}"
-    when @computer_marker
-      puts "#{@computer_name} won! " \
+    when computer.marker
+      puts "#{computer.name} won! " \
            "The final score was #{human.score}:#{computer.score}"
     else
       puts "It's a tie!"
     end
+    sleep(2)
   end
 
   def joinor(arr, delimiter=",", final_delimiter="or")
@@ -61,7 +73,7 @@ module Displayable
     arr[0..-2].join("#{delimiter} ") +
       "#{delimiter} #{final_delimiter} #{arr[-1]}"
   end
-  
+
   def clear
     system('clear')
   end
@@ -117,11 +129,15 @@ class Board
     !!winning_marker
   end
 
-  def three_same_squares?(squares)
-    markers = squares.select(&:marked?).collect(&:marker)
-    return false if markers.size != 3
-
-    markers.uniq.size == 1
+  def potential_winning_square(marker)
+    WINNING_LINES.each do |line|
+      player_squares = line.select { |sq| squares[sq].marker == marker }
+      if player_squares.size == 2 && single_empty_square_in_line(line,
+                                                                 player_squares)
+        return single_empty_square_in_line(line, player_squares)
+      end
+    end
+    nil
   end
 
   # returns winning marker or nil
@@ -137,6 +153,22 @@ class Board
 
   def reset
     (1..9).each { |key| @squares[key] = Square.new }
+  end
+
+  private
+
+  def three_same_squares?(squares)
+    markers = squares.select(&:marked?).collect(&:marker)
+    return false if markers.size != 3
+
+    markers.uniq.size == 1
+  end
+
+  def single_empty_square_in_line(line, player_squares)
+    if squares[(line - player_squares)[0]].unmarked?
+      return (line - player_squares)[0]
+    end
+    nil
   end
 end
 
@@ -163,6 +195,8 @@ class Square
 end
 
 class Player
+  include Displayable
+
   @@all_instances = []
   attr_reader :marker, :score, :name
 
@@ -173,13 +207,40 @@ class Player
     @@all_instances << self
   end
 
+  def self.all_instances
+    @@all_instances
+  end
+
+  def increment_score
+    @score += 1
+  end
+
+  def reset_score
+    @score = 0
+  end
+
+  def make_move(board)
+    raise NotImplementedError, "Subclasses must implement this method."
+  end
+
+  def choose_human_or_computer_randomly
+    answer = %w(human computer).sample
+    answer == 'human' ? self : opponent
+  end
+
+  private
+
+  def opponent
+    self.class.superclass.all_instances.find { |plyr| plyr != self }
+  end
+
   def choose_name
     loop do
       puts "Choose a name for " \
            "#{instance_of?(Human) ? 'yourself' : 'the computer'}:"
 
       name = gets.chomp
-      return name unless name.empty?
+      return name unless name.strip.empty?
       puts "Invalid input. Please enter a name"
     end
   end
@@ -194,27 +255,78 @@ class Player
            "the same as the player's marker."
     end
   end
-  
+
   def valid_marker_choice?(choice)
-    choice.size == 1 && !@@all_instances.any? { |inst| inst.marker == choice }
-  end
-
-  def increment_score
-    @score += 1
-  end
-
-  def reset_score
-    @score = 0
+    choice.size == 1 && !choice.strip.empty? &&
+      !@@all_instances.any? { |inst| inst.marker == choice }
   end
 end
 
-class Human < Player; end
+class Human < Player
+  def make_move(board)
+    puts "Choose a square (#{joinor(board.unmarked_keys)}):"
+    square = nil
+    loop do
+      square = gets.chomp.to_i
+      break if board.unmarked_keys.include?(square)
+      puts "Sorry, that's not a valid choice."
+    end
 
-class Computer < Player; end
+    board[square] = marker
+  end
+
+  def choose_first_move_settings
+    answer = nil
+    loop do
+      puts "Do you want to choose who goes first " \
+           "or assign first move at random? (enter choose/random)"
+      answer = gets.chomp.downcase
+      break if ['choose', 'random'].include?(answer)
+      puts "Invalid choice. Please enter choose or random"
+    end
+    return decide_first_move if answer == 'choose'
+    choose_human_or_computer_randomly
+  end
+
+  private
+
+  def decide_first_move
+    answer = nil
+    loop do
+      puts "Who gets first turn, #{name} or #{opponent.name}?"
+      answer = gets.chomp
+      break if [name, opponent.name].include?(answer)
+      puts "Invalid choice, please enter #{name} or #{opponent.name}"
+    end
+    answer == name ? self : opponent
+  end
+end
+
+class Computer < Player
+  def make_move(board)
+    if board.squares[5].unmarked?
+      board[5] = marker
+    elsif computer_winnable(board)
+      board[computer_winnable(board)] = marker
+    elsif human_winnable(board)
+      board[human_winnable(board)] = marker
+    else
+      board[board.unmarked_keys.sample] = marker
+    end
+  end
+
+  def human_winnable(board)
+    board.potential_winning_square(opponent.marker)
+  end
+
+  def computer_winnable(board)
+    board.potential_winning_square(marker)
+  end
+end
 
 class TTTGame
   include Displayable
-  
+
   attr_reader :board, :human, :computer
 
   def play
@@ -232,11 +344,7 @@ class TTTGame
     @squares = @board.squares
     @human = Human.new
     @computer = Computer.new
-    @human_name = @human.name
-    @human_marker = @human.marker
-    @computer_name = @computer.name
-    @computer_marker = @computer.marker
-    @current_marker = nil
+    @current_player = nil
     @round_counter = 1
   end
 
@@ -253,22 +361,12 @@ class TTTGame
   def play_first_to_five
     loop do
       clear_screen_and_display_board
+      first_move_settings if first_round?
       player_move
-      update_score
-      break if human.score == 5 || computer.score == 5
-      reset
-    end
-  end
-
-  def player_move
-    loop do
-      choose_first_move_settings if first_round?
       @round_counter += 1
-      current_player_moves
-
-      break if board.someone_won? || board.full?
-
-      clear_screen_and_display_board
+      update_score
+      break if Player.all_instances.any? { |inst| inst.score == 5 }
+      reset
     end
   end
 
@@ -276,100 +374,34 @@ class TTTGame
     @round_counter == 1
   end
 
-  def choose_first_move_settings
-    @first_move_marker = set_who_chooses_first_move
-    @current_marker = @first_move_marker
-  end
-
-  def set_who_chooses_first_move
-    answer = nil
+  def player_move
     loop do
-      puts "Who should choose who goes first, #{@human_name} " \
-           "or #{@computer_name}?"
-      answer = gets.chomp.downcase
-      break if [@human_name.downcase, @computer_name.downcase].include?(answer)
-      puts "Invalid choice. Please enter #{@human_name} or #{@computer_name}"
-    end
-    answer == @human_name.downcase ? human_decides : computer_decides
-  end
+      @current_player.make_move(board)
+      alternate_current_player
+      break if board.someone_won? || board.full?
 
-  def human_decides
-    answer = nil
-    loop do
-      puts "Who gets first turn, #{@human_name} or #{@computer_name}?"
-      answer = gets.chomp
-      break if [@human_name, @computer_name].include?(answer)
-      puts "Invalid choice, please enter #{@human_name} or #{@computer_name}"
-    end
-    answer == @human_name ? @human_marker : computer.marker
-  end
-
-  def computer_decides
-    answer = %w(human computer).sample
-    answer == human ? @human_marker : computer.marker
-  end
-
-  def current_player_moves
-    if human_turn?
-      human_moves
-      @current_marker = @computer.marker
-    else
-      computer_moves
-      @current_marker = @human_marker
+      clear_screen_and_display_board
     end
   end
 
-  def human_turn?
-    @current_marker == @human_marker
+  def alternate_current_player
+    @current_player = (@current_player == human ? computer : human)
   end
 
-  def potential_winning_square(marker)
-    Board::WINNING_LINES.each do |line|
-      player_squares = line.select { |sq| @squares[sq].marker == marker }
-      if player_squares.size == 2 && board[(line - player_squares)[0]].unmarked?
-        return (line - player_squares).first
-      end
-    end
-    nil
-  end
-
-  def human_moves
-    puts "Choose a square (#{joinor(board.unmarked_keys)}):"
-    square = nil
-    loop do
-      square = gets.chomp.to_i
-      break if board.unmarked_keys.include?(square)
-      puts "Sorry, that's not a valid choice."
-    end
-
-    board[square] = @human_marker
-  end
-
-  def computer_moves
-    human_winnable = potential_winning_square(@human_marker)
-    computer_winnable = potential_winning_square(computer.marker)
-    calculate_optimal_computer_move(human_winnable, computer_winnable)
-  end
-
-  def calculate_optimal_computer_move(human_winnable, computer_winnable)
-    if @squares[5].unmarked?
-      board[5] = @computer_marker
-    elsif computer_winnable
-      board[computer_winnable] = @computer_marker
-    elsif human_winnable
-      board[human_winnable] = @computer_marker
-    else
-      board[board.unmarked_keys.sample] = @computer_marker
-    end
+  def first_move_settings
+    @first_move_player = human.choose_first_move_settings
+    @current_player = @first_move_player
   end
 
   def update_score
     case board.winning_marker
-    when @human_marker
+    when human.marker
       human.increment_score
     when computer.marker
       computer.increment_score
     end
+    display_board
+    sleep(2)
   end
 
   def play_again?
@@ -385,7 +417,7 @@ class TTTGame
   end
 
   def reset
-    @current_marker = @first_move_marker
+    @current_player = @first_move_player
     board.reset
     clear
   end
