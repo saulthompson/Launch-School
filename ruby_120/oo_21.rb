@@ -101,7 +101,7 @@ class Participant
   end
 
   def stay
-    stay_message
+    stay_message(self)
   end
 
   def assess_ace_value
@@ -143,11 +143,13 @@ class Player < Participant
 end
 
 class Dealer < Participant
+  HIGHEST_TOTAL_BEFORE_STAY = 17
+
   def take_turn(deck)
     loop do
       show_cards_during_turn(self)
       sleep(2)
-      break unless total < 17
+      break unless total < HIGHEST_TOTAL_BEFORE_STAY
       hit(deck)
     end
     busted? ? busted_message(self) : stay
@@ -184,6 +186,8 @@ class Card
     @type = card_type
     @value = card_value_in_game(card_type)
   end
+
+  private
 
   # default ace value is 11
   def card_value_in_game(card_type)
