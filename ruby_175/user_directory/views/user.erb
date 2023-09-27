@@ -1,0 +1,9 @@
+<p><%= @email %></p>
+
+<p><%= @interests.join(', ') %></p>
+
+<ul>
+  <% @users.select {|user, _| user != @user }.each do |user, _| %>
+    <li><a href=<%= "users/#{user}]" %>></a><%= user %></li>
+  <% end %>
+</ul>
